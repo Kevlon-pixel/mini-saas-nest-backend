@@ -5,7 +5,6 @@ import {
   IsEnum,
   IsOptional,
   IsString,
-  Length,
   MinLength,
 } from 'class-validator';
 

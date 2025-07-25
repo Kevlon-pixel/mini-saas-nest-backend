@@ -1,12 +1,21 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  const port = process.env.PORT || 3000;
 
-  await app.listen(process.env.PORT ?? 3000, () =>
-    console.log(`Сервер стартовал по адресу localhost:${port}/`),
+  const config = new DocumentBuilder()
+    .setTitle('Mini SaaS API')
+    .setDescription('Документация API для Mini SaaS')
+    .setVersion('0.1')
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api', app, document);
+
+  const port = process.env.PORT || 3000;
+  await app.listen(port, () =>
+    console.log(`Сервер стартовал по адресу http://localhost:${port}/api`),
   );
 }
 bootstrap();

@@ -1,9 +1,9 @@
 import {
   BadRequestException,
-  Body,
   HttpException,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
@@ -22,8 +22,8 @@ export class UserService {
 
   async createUser(dto: CreateUserDto): Promise<Omit<User, 'password'>> {
     try {
-      const SALT = Number(process.env.SALT);
-      const hashedPassword = await bcrypt.hash(dto.password, SALT);
+      const salt = Number(process.env.SALT);
+      const hashedPassword = await bcrypt.hash(dto.password, salt);
 
       const existingUser = await this.userRepository.findUserByEmail(dto.email);
       if (existingUser) {
@@ -76,8 +76,8 @@ export class UserService {
           throw new UnauthorizedException('Пароли не совпадают');
         }
 
-        const SALT = Number(process.env.SALT);
-        data.passwordHash = await bcrypt.hash(dto.currentPassword, SALT);
+        const salt = Number(process.env.SALT);
+        data.passwordHash = await bcrypt.hash(dto.currentPassword, salt);
       }
 
       if (dto.name) {
@@ -87,6 +87,23 @@ export class UserService {
       return this.userRepository.updateUser(userId, data);
     } catch (err) {
       throw new InternalServerErrorException('Ошибка сервера');
+    }
+  }
+
+  async deleteUser(id: number): Promise<boolean> {
+    try {
+      const existingUser = await this.userRepository.findUserById(id);
+      if (!existingUser) {
+        throw new NotFoundException('Пользователь не найден');
+      }
+      if (existingUser.role === 'ADMIN' || existingUser.role === 'OWNER') {
+        throw new BadRequestException(
+          'Нельзя удалить администратора или владельца',
+        );
+      }
+      return this.userRepository.deleteUser(id);
+    } catch (err) {
+      throw new InternalServerErrorException('Ошибка удаления пользователя');
     }
   }
 }
