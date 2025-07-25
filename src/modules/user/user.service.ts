@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   HttpException,
   Injectable,
   InternalServerErrorException,
@@ -20,7 +21,7 @@ export class UserService {
     private readonly userRepository: UserRepository,
   ) {}
 
-  async createUser(dto: CreateUserDto): Promise<Omit<User, 'password'>> {
+  async createUser(dto: CreateUserDto): Promise<User> {
     try {
       const salt = Number(process.env.SALT);
       const hashedPassword = await bcrypt.hash(dto.password, salt);
@@ -41,7 +42,9 @@ export class UserService {
 
       return user;
     } catch (err) {
-      throw new InternalServerErrorException('Ошибка создание пользователя');
+      throw new InternalServerErrorException(
+        'Ошибка сервера при создании пользователя',
+      );
     }
   }
 
@@ -54,7 +57,7 @@ export class UserService {
           dto.email,
         );
         if (existingUser) {
-          throw new BadRequestException(
+          throw new ConflictException(
             'Пользователь с таким email уже существует',
           );
         }
@@ -86,7 +89,9 @@ export class UserService {
 
       return this.userRepository.updateUser(userId, data);
     } catch (err) {
-      throw new InternalServerErrorException('Ошибка сервера');
+      throw new InternalServerErrorException(
+        'Ошибка сервера при обновлении профиля',
+      );
     }
   }
 
@@ -103,7 +108,9 @@ export class UserService {
       }
       return this.userRepository.deleteUser(id);
     } catch (err) {
-      throw new InternalServerErrorException('Ошибка удаления пользователя');
+      throw new InternalServerErrorException(
+        'Ошибка сервера при удалении пользователя',
+      );
     }
   }
 }

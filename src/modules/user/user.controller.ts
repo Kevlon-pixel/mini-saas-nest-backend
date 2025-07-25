@@ -29,8 +29,8 @@ export class UserController {
 
   @Patch('me')
   async updateProfile(
-    @Body() dto: UpdateProfileDto,
     @Param('userId', ParseIntPipe) userId: number,
+    @Body() dto: UpdateProfileDto,
   ) {
     return this.userService.updateProfile(userId, dto);
   }
