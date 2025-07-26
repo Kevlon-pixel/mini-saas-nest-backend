@@ -9,6 +9,16 @@ async function bootstrap() {
     .setTitle('Mini SaaS API')
     .setDescription('Документация API для Mini SaaS')
     .setVersion('0.1')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'Authorization',
+        in: 'header',
+      },
+      'access-token',
+    )
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);

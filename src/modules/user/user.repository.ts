@@ -77,12 +77,6 @@ export class UserRepository {
   }
 
   async findAllUsers(): Promise<User[]> {
-    const users = await this.prisma.user.findMany({});
-
-    if (!users || users.length === 0) {
-      return [];
-    }
-
-    return users;
+    return await this.prisma.user.findMany({});
   }
 }

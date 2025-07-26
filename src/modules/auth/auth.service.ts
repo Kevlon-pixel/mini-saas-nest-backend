@@ -7,13 +7,13 @@ import {
 import { UserService } from 'src/modules/user/user.service';
 import { RegisterDto } from './dto/register.dto';
 import { JwtService } from '@nestjs/jwt';
-import { LoginDto } from './dto/refresh.dto';
+import { LoginDto } from './dto/login.dto';
 import { User } from '@prisma/client';
 import { UserRepository } from 'src/modules/user/user.repository';
 import * as bcrypt from 'bcrypt';
 import { randomUUID } from 'crypto';
 import { PrismaService } from 'prisma/prisma.service';
-import ms from 'ms';
+import * as ms from 'ms';
 
 @Injectable()
 export class AuthService {
@@ -36,8 +36,7 @@ export class AuthService {
 
     const tokenHash = await bcrypt.hash(tokenId, Number(process.env.SALT!));
     const expiresAt = new Date();
-    const ttl = ms(process.env.REFRESH_TOKEN_EXPIRES_IN!);
-    expiresAt.setDate(expiresAt.getDate() + ttl);
+    expiresAt.setDate(expiresAt.getDate() + 7);
 
     try {
       await this.prisma.refreshToken.create({
@@ -54,6 +53,7 @@ export class AuthService {
           'Данный токен уже существует, пройдите пожалуйста аутентификацию повторно',
         );
       }
+      console.error(err);
       throw new InternalServerErrorException('Не удалось создать токен');
     }
 
@@ -107,6 +107,7 @@ export class AuthService {
 
       return { accessToken, refreshToken };
     } catch (err) {
+      console.error(err);
       throw new InternalServerErrorException('Ошибка сервера при входе');
     }
   }
