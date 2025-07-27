@@ -57,12 +57,50 @@ export class AuthService {
       }
 
       const { accessToken, refreshToken, expiresAt } =
-        await this.tokenService.generateTokens(user);
+        await this.tokenService.generateTokens(user.id);
 
       return { accessToken, refreshToken, expiresAt };
     } catch (err) {
       console.log(err);
       throw new InternalServerErrorException('Ошибка сервера при входе');
     }
+  }
+
+  async logout(userId: number): Promise<void> {
+    const user = this.userRepository.findUserById(userId);
+    if (!user) {
+      throw new UnauthorizedException('Пользователь не найден');
+    }
+
+    await this.tokenService.revokeAllTokens(userId);
+  }
+
+  async refresh(
+    oldToken,
+  ): Promise<{ accessToken: string; refreshToken: string; expiresAt: Date }> {
+    let payload;
+    try {
+      payload = this.jwt.verify(oldToken, {
+        secret: process.env.JWT_REFRESH_SECRET!,
+      });
+    } catch (err) {
+      throw new UnauthorizedException(
+        'Некорректный или просроченный refresh токен',
+      );
+    }
+
+    const record = await this.prisma.refreshToken.findUnique({
+      where: { id: payload.jti },
+    });
+    if (!record || record.expiresAt < new Date()) {
+      throw new UnauthorizedException('Refresh токен не найден или истек');
+    }
+
+    this.tokenService.revokeOneToken(payload.jti);
+
+    const { accessToken, refreshToken, expiresAt } =
+      await this.tokenService.generateTokens(payload.sub);
+
+    return { accessToken, refreshToken, expiresAt };
   }
 }

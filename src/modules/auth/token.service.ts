@@ -2,6 +2,7 @@ import {
   ConflictException,
   Injectable,
   InternalServerErrorException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import * as bcrypt from 'bcrypt';
@@ -10,17 +11,24 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { PrismaService } from 'prisma/prisma.service';
 import * as ms from 'ms';
+import { UserRepository } from '../user/user.repository';
 
 @Injectable()
 export class TokenService {
   constructor(
     private readonly jwt: JwtService,
     private readonly prisma: PrismaService,
+    private readonly userRepository: UserRepository,
   ) {}
 
   async generateTokens(
-    user: User,
+    userId: number,
   ): Promise<{ accessToken: string; refreshToken: string; expiresAt: Date }> {
+    const user = await this.userRepository.findUserById(userId);
+    if (!user) {
+      throw new UnauthorizedException('Пользователь не найден');
+    }
+
     const tokenId = randomUUID();
 
     const accessToken = this.jwt.sign(
@@ -74,5 +82,31 @@ export class TokenService {
     }
 
     return { accessToken, refreshToken, expiresAt };
+  }
+
+  async revokeOneToken(jti: string): Promise<void> {
+    await this.prisma.refreshToken.update({
+      where: { id: jti },
+      data: {
+        revoked: true,
+        revokedAt: new Date(),
+      },
+    });
+  }
+
+  async revokeAllTokens(userId: number): Promise<void> {
+    await this.prisma.refreshToken.updateMany({
+      where: { userId: userId },
+      data: {
+        revoked: true,
+        revokedAt: new Date(),
+      },
+    });
+  }
+
+  async deleteRevokedTokens(jti: string): Promise<void> {
+    await this.prisma.refreshToken.deleteMany({
+      where: { revoked: true },
+    });
   }
 }
