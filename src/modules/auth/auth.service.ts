@@ -11,9 +11,8 @@ import { LoginDto } from './dto/login.dto';
 import { User } from '@prisma/client';
 import { UserRepository } from 'src/modules/user/user.repository';
 import * as bcrypt from 'bcrypt';
-import { randomUUID } from 'crypto';
 import { PrismaService } from 'prisma/prisma.service';
-import * as ms from 'ms';
+import { TokenService } from './token.service';
 
 @Injectable()
 export class AuthService {
@@ -22,54 +21,14 @@ export class AuthService {
     private readonly userRepository: UserRepository,
     private readonly jwt: JwtService,
     private readonly prisma: PrismaService,
+    private readonly tokenService: TokenService,
   ) {}
 
-  private async generateRefreshToken(user: User): Promise<string> {
-    const tokenId = randomUUID();
-
-    const payload = { sub: user.id, jti: tokenId, role: user.role };
-
-    const refreshToken = this.jwt.sign(payload, {
-      secret: process.env.JWT_REFRESH_SECRET!,
-      expiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN!,
-    });
-
-    const tokenHash = await bcrypt.hash(tokenId, Number(process.env.SALT!));
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7);
-
-    try {
-      await this.prisma.refreshToken.create({
-        data: {
-          id: tokenId,
-          userId: user.id,
-          tokenHash,
-          expiresAt,
-        },
-      });
-    } catch (err) {
-      if (err.code === 'P2002') {
-        throw new ConflictException(
-          'Данный токен уже существует, пройдите пожалуйста аутентификацию повторно',
-        );
-      }
-      console.error(err);
-      throw new InternalServerErrorException('Не удалось создать токен');
-    }
-
-    return refreshToken;
-  }
-
-  async register(dto: RegisterDto): Promise<{ message: string }> {
+  async register(dto: RegisterDto): Promise<{ user: User; message: string }> {
     try {
       const user = await this.userService.createUser(dto);
-      if (!user) {
-        throw new InternalServerErrorException(
-          'Ошибка сервера при создании пользователя',
-        );
-      }
 
-      return { message: 'Пользователь успешно зарегистрирован' };
+      return { message: 'Пользователь создан успешно', user };
     } catch (err) {
       if (err.code === 'P2002') {
         throw new ConflictException(
@@ -82,7 +41,7 @@ export class AuthService {
 
   async login(
     dto: LoginDto,
-  ): Promise<{ accessToken: string; refreshToken: string }> {
+  ): Promise<{ accessToken: string; refreshToken: string; expiresAt: Date }> {
     try {
       const user = await this.userRepository.findUserByEmail(dto.email);
       if (!user) {
@@ -97,17 +56,12 @@ export class AuthService {
         throw new UnauthorizedException('Неверный пароль');
       }
 
-      const payload = { sub: user.id, email: user.email };
-      const accessToken = this.jwt.sign(payload, {
-        secret: process.env.JWT_ACCESS_SECRET,
-        expiresIn: '15m',
-      });
+      const { accessToken, refreshToken, expiresAt } =
+        await this.tokenService.generateTokens(user);
 
-      const refreshToken = await this.generateRefreshToken(user);
-
-      return { accessToken, refreshToken };
+      return { accessToken, refreshToken, expiresAt };
     } catch (err) {
-      console.error(err);
+      console.log(err);
       throw new InternalServerErrorException('Ошибка сервера при входе');
     }
   }

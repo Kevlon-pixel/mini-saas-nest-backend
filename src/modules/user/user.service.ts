@@ -37,7 +37,9 @@ export class UserService {
         password: hashedPassword,
       });
       if (!user) {
-        throw new InternalServerErrorException('Ошибка создание пользователя');
+        throw new InternalServerErrorException(
+          'Ошибка сервера при создании пользователя',
+        );
       }
 
       return user;
