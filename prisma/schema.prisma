@@ -12,14 +12,14 @@ model User {
   email        String         @unique
   passwordHash String
   name         String?
-  role         Roles          @default(USER)
+  role         RolesEnum      @default(USER)
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
   RefreshToken RefreshToken[]
 }
 
 model RefreshToken {
-  id        String  @id 
+  id        String  @id
   userId    Int
   tokenHash String  @unique
   revoked   Boolean @default(false)
@@ -32,7 +32,7 @@ model RefreshToken {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-enum Roles {
+enum RolesEnum {
   USER
   ADMIN
   OWNER

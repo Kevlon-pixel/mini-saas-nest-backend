@@ -1,5 +1,5 @@
 import { ApiProperty, PartialType } from '@nestjs/swagger';
-import { Roles } from '@prisma/client';
+import { RolesEnum } from '@prisma/client';
 import {
   IsEmail,
   IsEnum,
@@ -49,6 +49,6 @@ export class UpdateProfileDto {
 export class UpdateUserDto extends PartialType(UpdateProfileDto) {
   @ApiProperty({ example: 'USER', description: 'Роль пользователя' })
   @IsOptional()
-  @IsEnum(Roles)
-  role?: Roles;
+  @IsEnum(RolesEnum)
+  role?: RolesEnum;
 }

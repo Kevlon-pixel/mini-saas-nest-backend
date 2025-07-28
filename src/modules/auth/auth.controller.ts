@@ -54,6 +54,8 @@ export class AuthController {
     return { message: 'Пользователь успешно вышел' };
   }
 
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Обновление refresh токена' })
   @Post('refresh')
   async refresh(@Req() req, @Res({ passthrough: true }) res) {

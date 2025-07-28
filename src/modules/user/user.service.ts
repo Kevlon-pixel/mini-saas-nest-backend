@@ -97,7 +97,7 @@ export class UserService {
     }
   }
 
-  async deleteUser(id: number): Promise<boolean> {
+  async deleteUser(id: number): Promise<{ userDelete: boolean }> {
     try {
       const existingUser = await this.userRepository.findUserById(id);
       if (!existingUser) {
@@ -108,7 +108,7 @@ export class UserService {
           'Нельзя удалить администратора или владельца',
         );
       }
-      return this.userRepository.deleteUser(id);
+      return { userDelete: await this.userRepository.deleteUser(id) };
     } catch (err) {
       throw new InternalServerErrorException(
         'Ошибка сервера при удалении пользователя',
