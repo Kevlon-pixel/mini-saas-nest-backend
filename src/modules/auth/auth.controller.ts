@@ -12,6 +12,7 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from './guards/jwt-guard';
+import { VerifyEmailDto } from './dto/verify-email.dto';
 
 @ApiTags('Аутентификация и авторизация')
 @Controller('auth')
@@ -22,6 +23,20 @@ export class AuthController {
   @Post('register')
   async register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
+  }
+
+  @Post('verify')
+  @ApiOperation({ summary: 'Подтверждение e‑mail' })
+  async verify(@Res({ passthrough: true }) res, @Body() dto: VerifyEmailDto) {
+    const { accessToken, refreshToken, expiresAt } =
+      await this.authService.verifyEmail(dto.token);
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      sameSite: 'Strict',
+      path: '/',
+      maxAge: expiresAt.getTime() - Date.now(),
+    });
+    return { accessToken };
   }
 
   @ApiOperation({ summary: 'Аутентификация пользователя' })

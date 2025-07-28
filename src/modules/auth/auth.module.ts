@@ -8,6 +8,7 @@ import { JwtAuthGuard } from './guards/jwt-guard';
 import { PrismaModule } from 'prisma/prisma.module';
 import { JwtStrategy } from './strategies/jwt-strategy';
 import { TokenService } from './token.service';
+import { MailerModule } from '../mailer/mailer.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { TokenService } from './token.service';
     }),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     PrismaModule,
+    MailerModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, TokenService, JwtAuthGuard, JwtStrategy],

@@ -44,6 +44,7 @@ export class UserService {
 
       return user;
     } catch (err) {
+      console.error(err);
       throw new InternalServerErrorException(
         'Ошибка сервера при создании пользователя',
       );

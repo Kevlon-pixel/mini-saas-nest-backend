@@ -76,7 +76,54 @@ export class UserRepository {
     return user;
   }
 
+  async findUserByEmailToken(token: string): Promise<User | null> {
+    const user = await this.prisma.user.findUnique({
+      where: { emailVerificationToken: token },
+    });
+
+    if (!user) {
+      return null;
+    }
+
+    return user;
+  }
+
   async findAllUsers(): Promise<User[]> {
     return await this.prisma.user.findMany({});
+  }
+
+  async updateEmailVerifyToken(
+    userId: number,
+    token: string,
+    tokenExpires: Date,
+  ): Promise<User | null> {
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        emailVerificationToken: token,
+        emailVerificationTokenExpire: tokenExpires,
+      },
+    });
+    if (!user) {
+      return null;
+    }
+
+    return user;
+  }
+
+  async updateEmailVerify(userId: number): Promise<User | null> {
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        isEmailVerifed: true,
+        emailVerificationToken: null,
+        emailVerificationTokenExpire: null,
+      },
+    });
+    if (!user) {
+      return null;
+    }
+
+    return user;
   }
 }

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   InternalServerErrorException,
@@ -13,6 +14,11 @@ import { UserRepository } from 'src/modules/user/user.repository';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from 'prisma/prisma.service';
 import { TokenService } from './token.service';
+import { randomUUID } from 'crypto';
+import { MailerService } from '@nestjs-modules/mailer';
+import { format } from 'date-fns';
+import { getTestMessageUrl } from 'nodemailer';
+import { error } from 'console';
 
 @Injectable()
 export class AuthService {
@@ -22,19 +28,82 @@ export class AuthService {
     private readonly jwt: JwtService,
     private readonly prisma: PrismaService,
     private readonly tokenService: TokenService,
+    private readonly mailer: MailerService,
   ) {}
 
-  async register(dto: RegisterDto): Promise<{ user: User; message: string }> {
+  async register(dto: RegisterDto) {
+    Promise<{ message: string; previewUrl: string }>;
     try {
+      const now = new Date();
+      const existing = await this.userRepository.findUserByEmail(dto.email);
+      if (existing) {
+        if (existing.isEmailVerifed) {
+          throw new ConflictException('Пользователь уже зарегистрирован');
+        }
+
+        if (existing.emailVerificationTokenExpire! > now) {
+          throw new BadRequestException(
+            'Ссылка ещё действительна, проверьте почту',
+          );
+        }
+
+        const token = randomUUID();
+
+        const expires = new Date();
+        const msInHour = 60 * 60 * 1000;
+        const newExpires = new Date(expires.getTime() + msInHour);
+
+        await this.userRepository.updateEmailVerifyToken(
+          existing.id,
+          token,
+          newExpires,
+        );
+
+        const link = `https://localhost:3000/auth/verify?token=${token}`;
+        const previewUrl = await this.sendVerification(
+          existing.email,
+          link,
+          newExpires,
+        );
+
+        return {
+          message: 'Письмо с подтверждением отправлено повторно',
+          previewUrl,
+        };
+      }
+
       const user = await this.userService.createUser(dto);
 
-      return { message: 'Пользователь создан успешно', user };
+      const token = randomUUID();
+
+      const expires = new Date();
+      const msInHour = 60 * 60 * 1000;
+      const newExpires = new Date(expires.getTime() + msInHour);
+
+      await this.userRepository.updateEmailVerifyToken(
+        user.id,
+        token,
+        newExpires,
+      );
+
+      const link = `https://localhost:3000/auth/verify?token=${token}`;
+      const previewUrl = await this.sendVerification(
+        user.email,
+        link,
+        newExpires,
+      );
+
+      return {
+        message: 'Письмо с ссылкой отправлено на почту',
+        previewUrl,
+      };
     } catch (err) {
       if (err.code === 'P2002') {
         throw new ConflictException(
           'Пользователь с таким email уже существует',
         );
       }
+      console.log(err);
       throw new InternalServerErrorException('Ошибка сервера при регистрации');
     }
   }
@@ -54,6 +123,10 @@ export class AuthService {
       );
       if (!isPasswordValid) {
         throw new UnauthorizedException('Неверный пароль');
+      }
+
+      if (!user.isEmailVerifed) {
+        throw new UnauthorizedException('Email пользователя не подтвержден');
       }
 
       const { accessToken, refreshToken, expiresAt } =
@@ -102,5 +175,38 @@ export class AuthService {
       await this.tokenService.generateTokens(payload.sub);
 
     return { accessToken, refreshToken, expiresAt };
+  }
+
+  async verifyEmail(
+    token: string,
+  ): Promise<{ accessToken: string; refreshToken: string; expiresAt: Date }> {
+    const user = await this.userRepository.findUserByEmailToken(token);
+    if (!user) {
+      throw new BadRequestException('Неверный токен');
+    }
+
+    if (user.emailVerificationTokenExpire! < new Date()) {
+      throw new BadRequestException('Токен истёк');
+    }
+
+    await this.userRepository.updateEmailVerify(user.id);
+
+    const { accessToken, refreshToken, expiresAt } =
+      await this.tokenService.generateTokens(user.id);
+
+    return { accessToken, refreshToken, expiresAt };
+  }
+
+  async sendVerification(email: string, link: string, expiry: Date) {
+    const info = await this.mailer.sendMail({
+      to: email,
+      subject: 'Подтверждение почты',
+      template: 'verify-email',
+      context: { link, expiry },
+    });
+
+    const preview = getTestMessageUrl(info);
+    console.log('Preview URL:', preview);
+    return preview;
   }
 }
