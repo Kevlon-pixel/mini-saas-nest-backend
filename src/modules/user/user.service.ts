@@ -13,18 +13,19 @@ import * as bcrypt from 'bcrypt';
 import { UserRepository } from './user.repository';
 import { Prisma, User } from '@prisma/client';
 import { UpdateProfileDto } from './dto/update-user.dto';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class UserService {
   constructor(
-    private readonly prisma: PrismaService,
     private readonly userRepository: UserRepository,
+    private readonly config: ConfigService,
   ) {}
 
   async createUser(dto: CreateUserDto): Promise<User> {
     try {
-      const salt = Number(process.env.SALT);
-      const hashedPassword = await bcrypt.hash(dto.password, salt);
+      const SALT = this.config.get<number>('SALT')!;
+      const hashedPassword = await bcrypt.hash(dto.password, SALT);
 
       const existingUser = await this.userRepository.findUserByEmail(dto.email);
       if (existingUser) {
@@ -82,8 +83,8 @@ export class UserService {
           throw new UnauthorizedException('Пароли не совпадают');
         }
 
-        const salt = Number(process.env.SALT);
-        data.passwordHash = await bcrypt.hash(dto.currentPassword, salt);
+        const SALT = this.config.get<number>('SALT')!;
+        data.passwordHash = await bcrypt.hash(dto.currentPassword, SALT);
       }
 
       if (dto.name) {

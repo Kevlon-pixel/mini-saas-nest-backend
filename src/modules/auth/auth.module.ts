@@ -9,14 +9,13 @@ import { PrismaModule } from 'prisma/prisma.module';
 import { JwtStrategy } from './strategies/jwt-strategy';
 import { TokenService } from './token.service';
 import { MailerModule } from '../mailer/mailer.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule,
     UserModule,
-    JwtModule.register({
-      secret: process.env.JWT_SECRET,
-      signOptions: { expiresIn: '1h' },
-    }),
+    JwtModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     PrismaModule,
     MailerModule,

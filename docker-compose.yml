@@ -21,7 +21,7 @@ services:
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
     ports: 
-      - "3000:3000"
+      - "5000:5000"
     command: npm run start:dev
 volumes:
   dbdata:

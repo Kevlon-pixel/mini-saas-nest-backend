@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  HttpException,
   Injectable,
   InternalServerErrorException,
   UnauthorizedException,
@@ -12,10 +13,12 @@ import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { PrismaService } from 'prisma/prisma.service';
 import * as ms from 'ms';
 import { UserRepository } from '../user/user.repository';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class TokenService {
   constructor(
+    private readonly config: ConfigService,
     private readonly jwt: JwtService,
     private readonly prisma: PrismaService,
     private readonly userRepository: UserRepository,
@@ -37,8 +40,8 @@ export class TokenService {
         role: user.role,
       },
       {
-        secret: process.env.JWT_ACCESS_SECRET,
-        expiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN!,
+        secret: this.config.get<string>('JWT_ACCESS_SECRET'),
+        expiresIn: this.config.get<string>('ACCESS_TOKEN_EXPIRES_IN'),
       },
     );
 
@@ -48,16 +51,17 @@ export class TokenService {
         jti: tokenId,
       },
       {
-        secret: process.env.JWT_REFRESH_SECRET!,
-        expiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN!,
+        secret: this.config.get<string>('JWT_REFRESH_SECRET'),
+        expiresIn: this.config.get<string>('REFRESH_TOKEN_EXPIRES_IN'),
       },
     );
 
     const expiresAt = new Date();
-    const days = parseInt(process.env.REFRESH_TOKEN_EXPIRES_IN!);
+    const days = parseInt(this.config.get<string>('REFRESH_TOKEN_EXPIRES_IN')!);
     expiresAt.setDate(expiresAt.getDate() + days);
 
-    const tokenHash = await bcrypt.hash(tokenId, Number(process.env.SALT!));
+    const SALT = this.config.get<number>('SALT')!;
+    const tokenHash = await bcrypt.hash(tokenId, SALT);
 
     try {
       await this.prisma.refreshToken.create({
@@ -77,7 +81,9 @@ export class TokenService {
           'Данный токен уже существует, пройдите пожалуйста аутентификацию повторно',
         );
       }
-      console.error(err);
+      if (err instanceof HttpException) {
+        throw err;
+      }
       throw new InternalServerErrorException('Не удалось создать токен');
     }
 

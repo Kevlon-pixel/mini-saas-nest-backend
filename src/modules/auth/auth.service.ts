@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  HttpException,
   Injectable,
   InternalServerErrorException,
   UnauthorizedException,
@@ -19,10 +20,12 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { format } from 'date-fns';
 import { getTestMessageUrl } from 'nodemailer';
 import { error } from 'console';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
   constructor(
+    private readonly config: ConfigService,
     private readonly userService: UserService,
     private readonly userRepository: UserRepository,
     private readonly jwt: JwtService,
@@ -103,7 +106,9 @@ export class AuthService {
           'Пользователь с таким email уже существует',
         );
       }
-      console.log(err);
+      if (err instanceof HttpException) {
+        throw err;
+      }
       throw new InternalServerErrorException('Ошибка сервера при регистрации');
     }
   }
@@ -134,7 +139,10 @@ export class AuthService {
 
       return { accessToken, refreshToken, expiresAt };
     } catch (err) {
-      console.log(err);
+      if (err instanceof HttpException) {
+        throw err;
+      }
+      console.error(err);
       throw new InternalServerErrorException('Ошибка сервера при входе');
     }
   }
@@ -154,7 +162,7 @@ export class AuthService {
     let payload;
     try {
       payload = this.jwt.verify(oldToken, {
-        secret: process.env.JWT_REFRESH_SECRET!,
+        secret: this.config.get<string>('JWT_REFRESH_SECRET'),
       });
     } catch (err) {
       throw new UnauthorizedException(

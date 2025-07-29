@@ -4,11 +4,15 @@ import { MailerService } from './mailer.service';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { join } from 'path';
 import { createTestAccount } from 'nodemailer';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule,
     NestMailer.forRootAsync({
-      useFactory: async () => {
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: async (config: ConfigService) => {
         const testAccount = await createTestAccount();
         return {
           transport: {
@@ -20,7 +24,7 @@ import { createTestAccount } from 'nodemailer';
               pass: testAccount.pass,
             },
           },
-          defaults: { from: `"No Reply" <${process.env.SMTP_USER}>` },
+          defaults: { from: `"No Reply" <${config.get<string>('SMTP_USER')}>` },
           template: {
             dir: join(__dirname, '../../../templates'),
             adapter: new HandlebarsAdapter(),
