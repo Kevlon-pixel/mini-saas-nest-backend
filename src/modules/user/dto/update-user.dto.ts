@@ -14,7 +14,7 @@ export class UpdateProfileDto {
     description: 'Имя пользователя',
   })
   @IsOptional()
-  @IsString()
+  @IsString({ message: 'Имя должно передаваться в виде строки' })
   name?: string;
 
   @ApiProperty({
@@ -22,7 +22,7 @@ export class UpdateProfileDto {
     description: 'Email пользователя',
   })
   @IsOptional()
-  @IsEmail()
+  @IsEmail({}, { message: 'email должен быть написан верно' })
   email?: string;
 
   @ApiProperty({
@@ -32,7 +32,7 @@ export class UpdateProfileDto {
   })
   @IsOptional()
   @IsString()
-  @MinLength(6)
+  @MinLength(6, { message: 'пароль должен быть строкой' })
   newPassword?: string;
 
   @ApiProperty({
@@ -42,13 +42,13 @@ export class UpdateProfileDto {
   })
   @IsOptional()
   @IsString()
-  @MinLength(6)
+  @MinLength(6, { message: 'пароль должен быть строкой' })
   currentPassword?: string;
 }
 
 export class UpdateUserDto extends PartialType(UpdateProfileDto) {
   @ApiProperty({ example: 'USER', description: 'Роль пользователя' })
   @IsOptional()
-  @IsEnum(RolesEnum)
+  @IsEnum(RolesEnum, { message: 'Роль должна передаваться как одна из enum' })
   role?: RolesEnum;
 }

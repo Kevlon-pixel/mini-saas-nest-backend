@@ -6,6 +6,7 @@ import {
   Res,
   UnauthorizedException,
   UseGuards,
+  UsePipes,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
@@ -13,12 +14,14 @@ import { LoginDto } from './dto/login.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from './guards/jwt-guard';
 import { VerifyEmailDto } from './dto/verify-email.dto';
+import { ValidationPipe } from 'src/pipes/validation.pipe';
 
 @ApiTags('Аутентификация и авторизация')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @UsePipes(ValidationPipe)
   @ApiOperation({ summary: 'Регистрация пользователя' })
   @Post('register')
   async register(@Body() dto: RegisterDto) {

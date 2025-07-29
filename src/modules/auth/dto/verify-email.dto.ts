@@ -6,6 +6,6 @@ export class VerifyEmailDto {
     example: 'uuid-token-from-email',
     description: 'Почтовый токен',
   })
-  @IsString()
+  @IsString({ message: 'Токен должен передаваться в виде строки' })
   token: string;
 }

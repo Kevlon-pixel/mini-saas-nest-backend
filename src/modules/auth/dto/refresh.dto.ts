@@ -6,6 +6,6 @@ export class RefreshDto {
     example: 'fu1h389h0...',
     description: 'Refresh токен пользователя',
   })
-  @IsString()
+  @IsString({ message: 'Токен должен передаваться в виде строки' })
   refreshToken: string;
 }
