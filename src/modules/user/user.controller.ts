@@ -12,20 +12,13 @@ import {
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateProfileDto } from './dto/update-user.dto';
-import {
-  ApiBearerAuth,
-  ApiBody,
-  ApiOperation,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UserRepository } from './user.repository';
 import { JwtAuthGuard } from '../auth/guards/jwt-guard';
 import { RolesGuard } from '../auth/guards/roles-guard';
 import { Roles } from '../auth/decorators/roles';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('ADMIN', 'OWNER')
 @ApiBearerAuth('access-token')
 @ApiTags('Пользователи')
 @Controller('user')

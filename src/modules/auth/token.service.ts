@@ -37,7 +37,7 @@ export class TokenService {
     const accessToken = this.jwt.sign(
       {
         sub: user.id,
-        role: user.role,
+        systemRole: user.role,
       },
       {
         secret: this.config.get<string>('JWT_ACCESS_SECRET'),

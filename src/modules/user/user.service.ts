@@ -105,10 +105,8 @@ export class UserService {
       if (!existingUser) {
         throw new NotFoundException('Пользователь не найден');
       }
-      if (existingUser.role === 'ADMIN' || existingUser.role === 'OWNER') {
-        throw new BadRequestException(
-          'Нельзя удалить администратора или владельца',
-        );
+      if (existingUser.role === 'SUPER_ADMIN') {
+        throw new BadRequestException('Нельзя удалить администратора');
       }
       return { userDelete: await this.userRepository.deleteUser(id) };
     } catch (err) {

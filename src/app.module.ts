@@ -17,7 +17,7 @@ import * as Joi from 'joi';
       validationSchema: Joi.object({
         PORT: Joi.number().default(3000),
         SALT: Joi.number().required(),
-        DATABASE_URL: Joi.string().uri().required(),
+        DATABASE_URL_HOST: Joi.string().uri().required(),
         JWT_ACCESS_SECRET: Joi.string().min(8).required(),
         JWT_REFRESH_SECRET: Joi.string().min(8).required(),
         ACCESS_TOKEN_EXPIRES_IN: Joi.string().default('30m'),

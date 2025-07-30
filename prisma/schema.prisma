@@ -1,18 +1,19 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url      = env("DATABASE_URL_HOST")
 }
 
 model User {
-  id           Int       @id @default(autoincrement())
-  email        String    @unique
+  id           Int        @id @default(autoincrement())
+  email        String     @unique
   passwordHash String
   name         String?
-  role         RolesEnum @default(USER)
+  role         SystemRole @default(USER)
 
   isEmailVerifed               Boolean   @default(false)
   emailVerificationToken       String?   @unique
@@ -38,8 +39,11 @@ model RefreshToken {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-enum RolesEnum {
+
+
+enum SystemRole {
   USER
-  ADMIN
-  OWNER
+  SUPPORT
+  SUPER_ADMIN
 }
+
