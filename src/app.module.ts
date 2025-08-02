@@ -7,6 +7,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { MailerModule } from './modules/mailer/mailer.module';
 import configuration from './config/configuration';
 import * as Joi from 'joi';
+import { OrganizationModule } from './modules/organization/organization.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import * as Joi from 'joi';
     PrismaModule,
     AuthModule,
     MailerModule,
+    OrganizationModule,
   ],
   controllers: [],
   providers: [AppService, ConfigService],

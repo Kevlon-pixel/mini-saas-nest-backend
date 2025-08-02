@@ -8,7 +8,7 @@ export class UserRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async createUser(dto: CreateUserDto): Promise<User | null> {
-    const user = this.prisma.user.create({
+    const user = await this.prisma.user.create({
       data: {
         email: dto.email,
         passwordHash: dto.password,
@@ -115,7 +115,7 @@ export class UserRepository {
     const user = await this.prisma.user.update({
       where: { id: userId },
       data: {
-        isEmailVerifed: true,
+        isEmailVerified: true,
         emailVerificationToken: null,
         emailVerificationTokenExpire: null,
       },

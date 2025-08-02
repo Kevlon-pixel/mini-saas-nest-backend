@@ -28,8 +28,9 @@ export class AuthController {
     return this.authService.register(dto);
   }
 
-  @Post('verify')
+  @UsePipes(ValidationPipe)
   @ApiOperation({ summary: 'Подтверждение e‑mail' })
+  @Post('verify')
   async verify(@Res({ passthrough: true }) res, @Body() dto: VerifyEmailDto) {
     const { accessToken, refreshToken, expiresAt } =
       await this.authService.verifyEmail(dto.token);
@@ -42,6 +43,7 @@ export class AuthController {
     return { accessToken };
   }
 
+  @UsePipes(ValidationPipe)
   @ApiOperation({ summary: 'Аутентификация пользователя' })
   @Post('login')
   async login(@Res({ passthrough: true }) res, @Body() dto: LoginDto) {
@@ -61,8 +63,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Выход пользователя' })
   @Post('logout')
   async logout(@Res({ passthrough: true }) res, @Req() req) {
-    const userId = req.user.id;
-    await this.authService.logout(req.sub);
+    await this.authService.logout(req.user.id);
     res.clearCookie('refreshToken', {
       httpOnly: true,
       sameSite: 'Strict',

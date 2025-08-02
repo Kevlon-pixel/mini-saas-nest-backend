@@ -15,7 +15,7 @@ model User {
   name         String?
   role         SystemRole @default(USER)
 
-  isEmailVerifed               Boolean   @default(false)
+  isEmailVerified              Boolean   @default(false)
   emailVerificationToken       String?   @unique
   emailVerificationTokenExpire DateTime?
 
@@ -23,6 +23,8 @@ model User {
   updatedAt DateTime @updatedAt
 
   RefreshToken RefreshToken[]
+  Organization Organization[]
+  Membership   Membership[]
 }
 
 model RefreshToken {
@@ -39,7 +41,26 @@ model RefreshToken {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+model Organization {
+  id          Int          @id @default(autoincrement())
+  name        String       @unique
+  ownerId     Int
+  owner       User         @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  memberships Membership[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
 
+model Membership {
+  userId         Int
+  organizationId Int
+  role           TenantRole
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@id([userId, organizationId])
+}
 
 enum SystemRole {
   USER
@@ -47,3 +68,8 @@ enum SystemRole {
   SUPER_ADMIN
 }
 
+enum TenantRole {
+  MEMBER
+  ADMIN
+  OWNER
+}

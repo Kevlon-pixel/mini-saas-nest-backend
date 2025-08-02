@@ -40,7 +40,7 @@ export class AuthService {
       const now = new Date();
       const existing = await this.userRepository.findUserByEmail(dto.email);
       if (existing) {
-        if (existing.isEmailVerifed) {
+        if (existing.isEmailVerified) {
           throw new ConflictException('Пользователь уже зарегистрирован');
         }
 
@@ -130,7 +130,7 @@ export class AuthService {
         throw new UnauthorizedException('Неверный пароль');
       }
 
-      if (!user.isEmailVerifed) {
+      if (!user.isEmailVerified) {
         throw new UnauthorizedException('Email пользователя не подтвержден');
       }
 
