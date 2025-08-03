@@ -59,7 +59,7 @@ export class OrganizationController {
   @TenantRoles(TenantRole.ADMIN, TenantRole.OWNER)
   @Get(':orgId/members')
   async getListUsers(@Req() req, @Param('orgId', ParseIntPipe) orgId: number) {
-    return this.organizationRepository.findAllOrganizationMember(orgId);
+    return this.organizationRepository.findAllOrgMem(orgId);
   }
 
   @ApiOperation({
@@ -68,7 +68,7 @@ export class OrganizationController {
   @UseGuards(JwtAuthGuard, TenantRolesGuard)
   @Get()
   async list(@Req() req) {
-    return this.organizationRepository.findAllMemberOrganization(req.user.id);
+    return this.organizationRepository.findAllMemOrg(req.user.id);
   }
 
   @ApiOperation({
@@ -77,7 +77,7 @@ export class OrganizationController {
   @UseGuards(JwtAuthGuard, TenantRolesGuard)
   @Get(':id')
   async get(@Req() req, @Param('id', ParseIntPipe) id: number) {
-    return this.organizationRepository.findUserInOrganization(req.user.id, id);
+    return this.organizationRepository.findUserInOrg(req.user.id, id);
   }
 
   @ApiOperation({ summary: 'Обновление данных организации' })
@@ -89,7 +89,7 @@ export class OrganizationController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateOrganizationDto,
   ) {
-    return this.organizationService.updateOrganization(req.user.id, id, dto);
+    return this.organizationService.updateOrg(id, dto);
   }
 
   @ApiOperation({ summary: 'Удаление организации' })

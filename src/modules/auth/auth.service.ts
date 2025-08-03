@@ -10,16 +10,13 @@ import { UserService } from 'src/modules/user/user.service';
 import { RegisterDto } from './dto/register.dto';
 import { JwtService } from '@nestjs/jwt';
 import { LoginDto } from './dto/login.dto';
-import { User } from '@prisma/client';
 import { UserRepository } from 'src/modules/user/user.repository';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from 'prisma/prisma.service';
 import { TokenService } from './token.service';
 import { randomUUID } from 'crypto';
 import { MailerService } from '@nestjs-modules/mailer';
-import { format } from 'date-fns';
 import { getTestMessageUrl } from 'nodemailer';
-import { error } from 'console';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()

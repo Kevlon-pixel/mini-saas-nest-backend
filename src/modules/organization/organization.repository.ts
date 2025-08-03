@@ -7,7 +7,7 @@ import { Injectable } from '@nestjs/common';
 export class OrganizationRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async createOrganization(
+  async create(
     userId: number,
     dto: CreateOrganizationDto,
   ): Promise<Organization | null> {
@@ -31,7 +31,7 @@ export class OrganizationRepository {
     return organization;
   }
 
-  async findOrganizationByName(name: string): Promise<Organization | null> {
+  async findOrgByName(name: string): Promise<Organization | null> {
     const organization = await this.prisma.organization.findUnique({
       where: {
         name: name,
@@ -45,7 +45,7 @@ export class OrganizationRepository {
     return organization;
   }
 
-  async findOrganizationById(id: number): Promise<Organization | null> {
+  async findOrgById(id: number): Promise<Organization | null> {
     const organization = await this.prisma.organization.findUnique({
       where: {
         id: id,
@@ -59,7 +59,7 @@ export class OrganizationRepository {
     return organization;
   }
 
-  async findAllOrganizationMember(organizationId: number) {
+  async findAllOrgMem(organizationId: number) {
     const list = await this.prisma.membership.findMany({
       where: {
         organizationId: organizationId,
@@ -78,7 +78,7 @@ export class OrganizationRepository {
     return list;
   }
 
-  async findAllMemberOrganization(userId: number): Promise<Organization[]> {
+  async findAllMemOrg(userId: number): Promise<Organization[]> {
     const list = await this.prisma.organization.findMany({
       where: {
         memberships: { some: { userId } },
@@ -88,7 +88,7 @@ export class OrganizationRepository {
     return list;
   }
 
-  async findUserInOrganization(
+  async findUserInOrg(
     userId: number,
     orgId: number,
   ): Promise<Organization | null> {
@@ -111,7 +111,7 @@ export class OrganizationRepository {
     return organization.organization;
   }
 
-  async getOrganizationInfo(organizationId: number) {
+  async getOrgInfo(organizationId: number) {
     const organization = await this.prisma.organization.findMany({
       include: {
         owner: { select: { id: true, email: true } },

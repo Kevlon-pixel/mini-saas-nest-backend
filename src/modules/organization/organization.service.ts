@@ -25,12 +25,12 @@ export class OrganizationService {
 
   async create(userId: number, dto: CreateOrganizationDto) {
     const existingOrganization =
-      await this.organizationRepository.findOrganizationByName(dto.name);
+      await this.organizationRepository.findOrgByName(dto.name);
     if (existingOrganization) {
       throw new BadRequestException('Такая организация уже существует');
     }
 
-    const organization = this.organizationRepository.createOrganization(
+    const organization = this.organizationRepository.create(
       userId,
       dto,
     );
@@ -64,7 +64,7 @@ export class OrganizationService {
     const user = await this.userRepository.findUserById(dto.userId);
     if (!user) throw new NotFoundException('Пользователь не найден');
 
-    const existing = await this.organizationRepository.findUserInOrganization(
+    const existing = await this.organizationRepository.findUserInOrg(
       dto.userId,
       orgId,
     );
@@ -93,8 +93,7 @@ export class OrganizationService {
     return membership;
   }
 
-  async updateOrganization(
-    userId: number,
+  async updateOrg(
     organizationId: number,
     dto: UpdateOrganizationDto,
   ) {
@@ -102,14 +101,14 @@ export class OrganizationService {
 
     try {
       const organization =
-        await this.organizationRepository.findOrganizationById(organizationId);
+        await this.organizationRepository.findOrgById(organizationId);
 
       if (!organization) {
         throw new BadRequestException('Заданной организации не существует');
       }
       if (dto.name) {
         const existingByName =
-          await this.organizationRepository.findOrganizationByName(dto.name);
+          await this.organizationRepository.findOrgByName(dto.name);
         if (existingByName) {
           throw new ConflictException(
             'Организация с таким именем уже существует',
@@ -138,7 +137,7 @@ export class OrganizationService {
   ): Promise<{ userDelete: boolean }> {
     try {
       const existingOrganization =
-        await this.organizationRepository.findOrganizationById(organizationId);
+        await this.organizationRepository.findOrgById(organizationId);
       if (!existingOrganization) {
         throw new NotFoundException('Организация не найдена');
       }

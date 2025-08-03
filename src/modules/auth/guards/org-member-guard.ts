@@ -14,9 +14,9 @@ export class OrgMemberGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest();
     const user = req.user;
-    const orgId = req.params.id;
+    const orgId = Number(req.params.orgId);
 
-    if (!user || !user.userId) {
+    if (!user || !user.id) {
       throw new ForbiddenException('Пользователь не аутентифицирован');
     }
     if (!orgId) {
@@ -26,13 +26,13 @@ export class OrgMemberGuard implements CanActivate {
     const membership = await this.prisma.membership.findUnique({
       where: {
         userId_organizationId: {
-          userId: user.userId,
+          userId: user.id,
           organizationId: orgId,
         },
       },
     });
     if (!membership) {
-      throw new ForbiddenException('вы не член организации');
+      throw new ForbiddenException('Вы не состоите в организации');
     }
 
     req.organizationRole = membership.role;

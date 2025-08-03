@@ -8,6 +8,7 @@ import { MailerModule } from './modules/mailer/mailer.module';
 import configuration from './config/configuration';
 import * as Joi from 'joi';
 import { OrganizationModule } from './modules/organization/organization.module';
+import { InvitationModule } from './modules/invitation/invitation.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { OrganizationModule } from './modules/organization/organization.module';
     AuthModule,
     MailerModule,
     OrganizationModule,
+    InvitationModule,
   ],
   controllers: [],
   providers: [AppService, ConfigService],
