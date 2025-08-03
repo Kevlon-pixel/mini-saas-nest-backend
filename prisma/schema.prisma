@@ -42,19 +42,20 @@ model RefreshToken {
 }
 
 model Organization {
-  id          Int          @id @default(autoincrement())
-  name        String       @unique
-  ownerId     Int
-  owner       User         @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  memberships Membership[]
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id             Int          @id @default(autoincrement())
+  name           String       @unique
+  countOfMembers Int          @default(1)
+  ownerId        Int
+  owner          User         @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  memberships    Membership[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 }
 
 model Membership {
   userId         Int
   organizationId Int
-  role           TenantRole
+  role           TenantRole @default(MEMBER)
 
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   organization Organization @relation(fields: [organizationId], references: [id])

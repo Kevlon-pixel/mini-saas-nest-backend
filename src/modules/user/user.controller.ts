@@ -15,10 +15,9 @@ import { UpdateProfileDto } from './dto/update-user.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UserRepository } from './user.repository';
 import { JwtAuthGuard } from '../auth/guards/jwt-guard';
-import { RolesGuard } from '../auth/guards/roles-guard';
-import { Roles } from '../auth/decorators/roles';
+import { SystemRolesGuard } from '../auth/guards/system-roles-guard';
 
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, SystemRolesGuard)
 @ApiBearerAuth('access-token')
 @ApiTags('Пользователи')
 @Controller('user')

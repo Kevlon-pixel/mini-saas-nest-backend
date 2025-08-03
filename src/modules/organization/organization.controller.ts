@@ -18,6 +18,10 @@ import { OrganizationRepository } from './organization.repository';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ValidationPipe } from 'src/pipes/validation.pipe';
+import { TenantRolesGuard } from '../auth/guards/tenant-roles-guard';
+import { TenantRole } from '@prisma/client';
+import { TenantRoles } from '../auth/decorators/roles';
+import { AddMemberDto } from './dto/add-member.dto';
 
 @ApiBearerAuth('access-token')
 @ApiTags('Работа с организациями')
@@ -37,10 +41,31 @@ export class OrganizationController {
     return this.organizationService.create(req.user.id, dto);
   }
 
+  @ApiOperation({ summary: 'Добавить пользователя в организацию' })
+  @UseGuards(JwtAuthGuard)
+  @Post(':orgId/members')
+  async addMember(
+    @Req() req,
+    @Param('orgId', ParseIntPipe) orgId: number,
+    @Body() dto: AddMemberDto,
+  ) {
+    return this.organizationService.addMember(req.user.id, orgId, dto);
+  }
+
+  @ApiOperation({
+    summary: 'Получение списка пользователей организации',
+  })
+  @UseGuards(JwtAuthGuard, TenantRolesGuard)
+  @TenantRoles(TenantRole.ADMIN, TenantRole.OWNER)
+  @Get(':orgId/members')
+  async getListUsers(@Req() req, @Param('orgId', ParseIntPipe) orgId: number) {
+    return this.organizationRepository.findAllOrganizationMember(orgId);
+  }
+
   @ApiOperation({
     summary: 'Вывод всех организаций в которых состоит пользователь',
   })
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, TenantRolesGuard)
   @Get()
   async list(@Req() req) {
     return this.organizationRepository.findAllMemberOrganization(req.user.id);
@@ -49,14 +74,15 @@ export class OrganizationController {
   @ApiOperation({
     summary: 'Получение данных организации, если пользователь состоит в ней',
   })
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, TenantRolesGuard)
   @Get(':id')
   async get(@Req() req, @Param('id', ParseIntPipe) id: number) {
     return this.organizationRepository.findUserInOrganization(req.user.id, id);
   }
 
   @ApiOperation({ summary: 'Обновление данных организации' })
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, TenantRolesGuard)
+  @TenantRoles(TenantRole.ADMIN, TenantRole.OWNER)
   @Patch(':id')
   async update(
     @Req() req,
@@ -67,7 +93,8 @@ export class OrganizationController {
   }
 
   @ApiOperation({ summary: 'Удаление организации' })
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, TenantRolesGuard)
+  @TenantRoles(TenantRole.OWNER)
   @UsePipes()
   @Delete(':id')
   async deleteOrganization(@Req() req, @Param('id', ParseIntPipe) id: number) {

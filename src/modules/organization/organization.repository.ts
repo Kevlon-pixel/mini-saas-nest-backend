@@ -59,16 +59,29 @@ export class OrganizationRepository {
     return organization;
   }
 
-  async findAllMemberOrganization(
-    userId: number,
-  ): Promise<{ id: number; name: string }[]> {
+  async findAllOrganizationMember(organizationId: number) {
+    const list = await this.prisma.membership.findMany({
+      where: {
+        organizationId: organizationId,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    return list;
+  }
+
+  async findAllMemberOrganization(userId: number): Promise<Organization[]> {
     const list = await this.prisma.organization.findMany({
       where: {
         memberships: { some: { userId } },
-      },
-      select: {
-        id: true,
-        name: true,
       },
     });
 

@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   HttpException,
   Injectable,
   InternalServerErrorException,
@@ -9,12 +10,17 @@ import {
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { OrganizationRepository } from './organization.repository';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
-import { Prisma } from '@prisma/client';
+import { Prisma, TenantRole } from '@prisma/client';
+import { PrismaService } from 'prisma/prisma.service';
+import { AddMemberDto } from './dto/add-member.dto';
+import { UserRepository } from '../user/user.repository';
 
 @Injectable()
 export class OrganizationService {
   constructor(
     private readonly organizationRepository: OrganizationRepository,
+    private readonly prisma: PrismaService,
+    private readonly userRepository: UserRepository,
   ) {}
 
   async create(userId: number, dto: CreateOrganizationDto) {
@@ -34,6 +40,57 @@ export class OrganizationService {
     }
 
     return organization;
+  }
+
+  async addMember(actorId: number, orgId: number, dto: AddMemberDto) {
+    const org = await this.prisma.organization.findUnique({
+      where: { id: orgId },
+      select: { id: true, ownerId: true },
+    });
+    if (!org) throw new NotFoundException('Организация не найдена');
+
+    if (actorId !== org.ownerId) {
+      const actorMembership = await this.prisma.membership.findUnique({
+        where: {
+          userId_organizationId: { userId: actorId, organizationId: orgId },
+        },
+        select: { role: true },
+      });
+      const isAdmin =
+        actorMembership?.role === 'ADMIN' || actorMembership?.role === 'OWNER';
+      if (!isAdmin) throw new ForbiddenException('Недостаточно прав');
+    }
+
+    const user = await this.userRepository.findUserById(dto.userId);
+    if (!user) throw new NotFoundException('Пользователь не найден');
+
+    const existing = await this.organizationRepository.findUserInOrganization(
+      dto.userId,
+      orgId,
+    );
+    if (existing)
+      throw new ConflictException('Пользователь уже состоит в организации');
+
+    const role: TenantRole = dto.role ?? 'MEMBER';
+
+    const membership = await this.prisma.membership.create({
+      data: {
+        userId: dto.userId,
+        organizationId: orgId,
+        role,
+      },
+      include: { user: { select: { id: true, name: true, email: true } } },
+    });
+
+    await this.prisma.organization.update({
+      where: {
+        id: membership.organizationId,
+      },
+      data: {
+        countOfMembers: { increment: 1 },
+      },
+    });
+    return membership;
   }
 
   async updateOrganization(

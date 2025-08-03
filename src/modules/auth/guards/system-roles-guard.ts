@@ -6,11 +6,10 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { SystemRole } from '@prisma/client';
-import { Observable } from 'rxjs';
 import { ROLES_KEY } from '../decorators/roles';
 
 @Injectable()
-export class RolesGuard implements CanActivate {
+export class SystemRolesGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {

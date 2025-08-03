@@ -6,10 +6,12 @@ import { JwtAuthGuard } from '../auth/guards/jwt-guard';
 import { JwtModule } from '@nestjs/jwt';
 import { OrganizationRepository } from './organization.repository';
 import { PrismaService } from 'prisma/prisma.service';
+import { UserModule } from '../user/user.module';
+import { UserRepository } from '../user/user.repository';
 
 @Module({
-  imports: [PrismaModule, JwtModule],
+  imports: [PrismaModule, JwtModule, UserModule],
   controllers: [OrganizationController],
-  providers: [OrganizationService, OrganizationRepository, JwtAuthGuard, PrismaService],
+  providers: [OrganizationService, OrganizationRepository, JwtAuthGuard, PrismaService, UserRepository],
 })
 export class OrganizationModule {}
