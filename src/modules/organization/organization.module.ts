@@ -13,5 +13,6 @@ import { UserRepository } from '../user/user.repository';
   imports: [PrismaModule, JwtModule, UserModule],
   controllers: [OrganizationController],
   providers: [OrganizationService, OrganizationRepository, JwtAuthGuard, PrismaService, UserRepository],
+  exports: [OrganizationRepository]
 })
 export class OrganizationModule {}

@@ -9,6 +9,7 @@ import configuration from './config/configuration';
 import * as Joi from 'joi';
 import { OrganizationModule } from './modules/organization/organization.module';
 import { InvitationModule } from './modules/invitation/invitation.module';
+import { TasksModule } from './modules/tasks/tasks.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { InvitationModule } from './modules/invitation/invitation.module';
     MailerModule,
     OrganizationModule,
     InvitationModule,
+    TasksModule,
   ],
   controllers: [],
   providers: [AppService, ConfigService],
